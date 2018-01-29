@@ -15,6 +15,7 @@ fi
 APP=ruby
 VERSION=2.3.6
 
+ROOT_DIR="$PWD"
 APP_DIR="$PWD/$APP.AppDir"
 
 echo "--> get ruby source"
@@ -48,28 +49,32 @@ wget -q https://github.com/AppImage/AppImages/raw/master/functions.sh -O ./funct
 
 pushd "$APP_DIR"
 
-# copy dependencies
+echo "--> get AppRun"
+get_apprun
+
+echo "--> get desktop file and icon"
+cp $ROOT_DIR/$APP.desktop $ROOT_DIR/$APP.png .
+
+echo "--> copy dependencies"
 copy_deps
-# move the libraries to usr/bin
+
+echo "--> move the libraries to usr/bin"
 move_lib
 
-# delete stuff that should not go into the AppImage.
+echo "--> delete stuff that should not go into the AppImage."
 delete_blacklisted
+
+popd
 
 ########################################################################
 # AppDir complete. Now package it as an AppImage.
 ########################################################################
 
-# No need for a fancy script. AppRun can just be a symlink to nvim.
-ln -s usr/bin/ruby AppRun
-
-popd
-
 echo "--> enable fuse"
 sudo modprobe fuse
 sudo usermod -a -G fuse $(whoami)
 
-# Generate AppImage.
+echo "--> generate AppImage"
 #   - Expects: $ARCH, $APP, $VERSION env vars
 #   - Expects: ./$APP.AppDir/ directory
 #   - Produces: ../out/$APP-$VERSION.glibc$GLIBC_NEEDED-$ARCH.AppImage
@@ -83,5 +88,7 @@ generate_appimage
 # mv "$ROOT_DIR"/out/*.AppImage "$ROOT_DIR"/build/bin
 # Remove the (now empty) folder the AppImage was built in
 # rmdir "$ROOT_DIR"/out
+
+mv ../out/*.AppImage "$TRAVIS_BUILD_DIR"
 
 echo '==> finished'
