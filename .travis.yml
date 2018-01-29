@@ -1,1 +1,5 @@
+dist: trusty
+sudo: required
+language: c
+compiler: gcc
 script: scripts/gen_appimage.sh

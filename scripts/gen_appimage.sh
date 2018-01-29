@@ -24,7 +24,7 @@ tar xf ruby-2.3.6.tar.gz
 echo "--> compile Ruby and install it into AppDir"
 pushd ruby-2.3.6
 ./configure --prefix=/usr
-make
+make -j2
 make "DESTDIR=$APP_DIR" install
 popd
 
@@ -64,6 +64,10 @@ delete_blacklisted
 ln -s usr/bin/ruby AppRun
 
 popd
+
+echo "--> enable fuse"
+sudo modprobe fuse
+sudo usermod -a -G fuse $(whoami)
 
 # Generate AppImage.
 #   - Expects: $ARCH, $APP, $VERSION env vars
