@@ -6,6 +6,24 @@
 # For more information, see http://appimage.org/
 ########################################################################
 
+# replace paths in binary file, padding paths with /
+# usage: replace_paths_in_file FILE PATTERN REPLACEMENT
+replace_paths_in_file () {
+  local file="$1"
+  local pattern="$2"
+  local replacement="$3"
+  if [[ ${#pattern} -lt ${#replacement} ]]; then
+    echo "New path '$replacement' is longer than '$pattern'. Exiting."
+    return
+  fi
+  while [[ ${#pattern} -gt ${#replacement} ]]; do
+    replacement="${replacement}/"
+  done
+  echo -n "Replacing $pattern with $replacement ... "
+  sed -i -e "s|$pattern|$replacement|g" $file
+  echo "Done!"
+}
+
 # App arch, used by generate_appimage.
 if [ -z "$ARCH" ]; then
   export ARCH="$(arch)"
@@ -24,13 +42,14 @@ tar xf ruby-2.3.6.tar.gz
 
 echo "--> compile Ruby and install it into AppDir"
 pushd ruby-2.3.6
-./configure --prefix=/usr
+./configure --prefix=$APP_DIR/usr
 make -j2
-make "DESTDIR=$APP_DIR" install
+make install
 popd
 
 echo "--> patch away absolute paths"
-sed -i -e 's|/usr|././|g' "$APP_DIR/usr/bin/ruby"
+replace_paths_in_file "$APP_DIR/usr/bin/ruby" $APP_DIR/usr .
+
 
 # remove doc, man, ri
 rm -rf "$APP_DIR/usr/share"
